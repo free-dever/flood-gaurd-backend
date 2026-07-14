@@ -31,3 +31,10 @@ OPENMETEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 
 # ── Request settings ──────────────────────────────────────────────────────────
 REQUEST_TIMEOUT = 30   # seconds
+
+# This job runs unattended (GitHub Actions, twice a day — see
+# .github/workflows/pipeline.yml) with no one around to just retry a
+# transient timeout by hand, so failed requests get a few automatic retries
+# before giving up.
+MAX_RETRIES           = 3
+RETRY_BACKOFF_SECONDS = 5

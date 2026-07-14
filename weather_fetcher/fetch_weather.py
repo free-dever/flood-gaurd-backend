@@ -20,6 +20,7 @@ Variables fetched
 
 import sys
 import os
+import time
 from datetime import datetime, timezone
 
 import requests
@@ -34,6 +35,8 @@ from weather_fetcher.config import (
     OPENMETEO_ARCHIVE_URL,
     OPENMETEO_FORECAST_URL,
     REQUEST_TIMEOUT,
+    MAX_RETRIES,
+    RETRY_BACKOFF_SECONDS,
 )
 
 HOURLY_VARS = [
@@ -45,6 +48,31 @@ HOURLY_VARS = [
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _get_with_retry(url: str, params: dict) -> requests.Response:
+    """
+    GET with a few retries on transient network errors (timeouts, connection
+    resets). Open-Meteo occasionally times out on slower connections — e.g.
+    GitHub Actions runners — and this job runs unattended twice a day with
+    no one around to just retry it by hand.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+            resp.raise_for_status()
+            return resp
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+            last_exc = exc
+            if attempt < MAX_RETRIES:
+                print(
+                    f"(attempt {attempt}/{MAX_RETRIES} failed: {exc}; "
+                    f"retrying in {RETRY_BACKOFF_SECONDS}s) ",
+                    end="", flush=True,
+                )
+                time.sleep(RETRY_BACKOFF_SECONDS)
+    raise last_exc
+
 
 def _get_or_create_station(db, name: str, lat: float, lon: float) -> Station:
     """Return the Station row, creating it if it doesn't exist yet."""
@@ -92,8 +120,7 @@ def fetch_and_store_historical(db, station: Station) -> int:
         "hourly":     ",".join(HOURLY_VARS),
         "timezone":   "Africa/Kampala",
     }
-    resp = requests.get(OPENMETEO_ARCHIVE_URL, params=params, timeout=REQUEST_TIMEOUT)
-    resp.raise_for_status()
+    resp = _get_with_retry(OPENMETEO_ARCHIVE_URL, params)
 
     rows = _parse_hourly(resp.json())
     inserted = 0
@@ -124,8 +151,7 @@ def fetch_and_store_forecast(db, station: Station) -> int:
         "forecast_days": FORECAST_DAYS,
         "timezone":      "Africa/Kampala",
     }
-    resp = requests.get(OPENMETEO_FORECAST_URL, params=params, timeout=REQUEST_TIMEOUT)
-    resp.raise_for_status()
+    resp = _get_with_retry(OPENMETEO_FORECAST_URL, params)
 
     # Wipe stale forecast rows for this station
     db.query(WeatherForecast).filter_by(station_id=station.id).delete()
