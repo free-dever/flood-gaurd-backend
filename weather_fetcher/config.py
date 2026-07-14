@@ -1,0 +1,33 @@
+"""
+Flood Guard — Weather Fetcher Configuration
+============================================
+Edit this file to change monitoring stations, date ranges, or API settings.
+No other files need to change for most configuration adjustments.
+"""
+
+from datetime import date, timedelta
+
+# ── Monitoring stations ───────────────────────────────────────────────────────
+# Format: (name, latitude, longitude)
+# All four locations are flood-prone areas in and around Kampala.
+STATIONS = [
+    ("kampala_city_centre", 0.3476,  32.5825),
+    ("nakivubo_channel",    0.3167,  32.5833),
+    ("lubigi_wetland",      0.3333,  32.5333),
+    ("bwaise",              0.3417,  32.5564),
+]
+
+# ── Historical date range ─────────────────────────────────────────────────────
+# Open-Meteo archive has a ~1-day lag, so end date is yesterday.
+HISTORY_END   = date.today() - timedelta(days=1)
+HISTORY_START = HISTORY_END  - timedelta(days=29)   # 30-day rolling window
+
+# ── Forecast horizon ──────────────────────────────────────────────────────────
+FORECAST_DAYS = 7    # hourly weather forecast (max 16 on free tier)
+
+# ── API base URLs ─────────────────────────────────────────────────────────────
+OPENMETEO_ARCHIVE_URL  = "https://archive-api.open-meteo.com/v1/archive"
+OPENMETEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+
+# ── Request settings ──────────────────────────────────────────────────────────
+REQUEST_TIMEOUT = 30   # seconds

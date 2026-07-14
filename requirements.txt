@@ -1,0 +1,19 @@
+fastapi[standard]
+sqlalchemy
+psycopg2-binary
+python-dotenv
+pytest
+httpx2
+
+# Data & ML
+pandas
+scikit-learn
+xgboost
+lightgbm
+joblib
+
+# EDA
+matplotlib
+seaborn
+jupyter
+ipykernel

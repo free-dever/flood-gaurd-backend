@@ -1,0 +1,39 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.venv-1/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files
+data/raw/
+
+# Model artifacts too large for GitHub's 100MB hard limit.
+# Only lightgbm.joblib is actually loaded for serving (see model_service/config.py);
+# random_forest.joblib (~220MB) is comparison-only from model_training/train_models.ipynb
+# and isn't needed to run anything — kept locally, not in git.
+model_service/models/random_forest.joblib
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NEON
+.neon
