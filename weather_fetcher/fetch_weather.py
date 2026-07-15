@@ -37,6 +37,7 @@ from weather_fetcher.config import (
     REQUEST_TIMEOUT,
     MAX_RETRIES,
     RETRY_BACKOFF_SECONDS,
+    INTER_REQUEST_DELAY_SECONDS,
 )
 
 HOURLY_VARS = [
@@ -66,9 +67,9 @@ def _get_with_retry(url: str, params: dict) -> requests.Response:
             last_exc = exc
             if attempt < MAX_RETRIES:
                 print(
-                    f"(attempt {attempt}/{MAX_RETRIES} failed: {exc}; "
-                    f"retrying in {RETRY_BACKOFF_SECONDS}s) ",
-                    end="", flush=True,
+                    f"\n      (attempt {attempt}/{MAX_RETRIES} failed: {exc}; "
+                    f"retrying in {RETRY_BACKOFF_SECONDS}s)",
+                    flush=True,
                 )
                 time.sleep(RETRY_BACKOFF_SECONDS)
     raise last_exc
@@ -169,7 +170,14 @@ def fetch_and_store_forecast(db, station: Station) -> int:
 def run() -> None:
     db = SessionLocal()
     try:
-        for name, lat, lon in STATIONS:
+        for i, (name, lat, lon) in enumerate(STATIONS):
+            # Space out requests between stations — rapid back-to-back
+            # requests appear to be what triggers Open-Meteo slowdowns/
+            # timeouts on GitHub Actions (both real failures hit a later
+            # station, never the first).
+            if i > 0:
+                time.sleep(INTER_REQUEST_DELAY_SECONDS)
+
             print(f"\n  [{name}]")
 
             station = _get_or_create_station(db, name, lat, lon)
