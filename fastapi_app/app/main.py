@@ -11,6 +11,7 @@ Swagger UI (interactive docs) will be available at:
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # ── App instance ──────────────────────────────────────────────────────────────
 # This object IS the application. Everything else (routes, middleware) attaches
@@ -19,6 +20,16 @@ app = FastAPI(
     title="Flood Guard API",
     description="Weather data API for flood early-warning in Kampala, Uganda.",
     version="0.1.0",
+)
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Allows the deployed frontend (browser) to call this API from a different origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://floodguard-frontend-lovat.vercel.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────

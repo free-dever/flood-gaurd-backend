@@ -19,12 +19,10 @@ a frontend against that API.
 > *first* request after a quiet period can take 30-50+ seconds while it wakes
 > up. Don't treat that as broken — it's normal, and every request after is fast.
 
-> **⚠ No CORS configured yet.** The FastAPI app currently has no
-> `CORSMiddleware`. If you build a browser-based frontend (React, Vue, plain
-> JS) hosted on a different origin than the API, requests **will be blocked
-> by the browser** until CORS is added. This is a known gap, not something
-> you're doing wrong — flag it when you're ready to build the frontend and
-> it's a small fix.
+> **CORS**: `CORSMiddleware` is configured to allow requests from
+> `https://floodguard-frontend-lovat.vercel.app`. If you deploy the frontend
+> to a different origin, add it to `allow_origins` in
+> `fastapi_app/app/main.py`.
 
 ---
 
@@ -452,5 +450,4 @@ architecture above — a frontend dev mainly needs Part 1):
 
 Where things stand now: the pipeline above is live and running
 automatically. Not yet done: Docker, and a general "professional practices"
-pass (logging, pinned dependency versions, CORS — see the warning at the
-top of this document).
+pass (logging, pinned dependency versions).
