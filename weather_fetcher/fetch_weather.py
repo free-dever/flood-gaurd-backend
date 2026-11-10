@@ -124,14 +124,26 @@ def fetch_and_store_historical(db, station: Station) -> int:
     resp = _get_with_retry(OPENMETEO_ARCHIVE_URL, params)
 
     rows = _parse_hourly(resp.json())
+    if not rows:
+        return 0
+
+    # Load the timestamps already stored for this window in ONE query,
+    # rather than one existence-check query per row (~720 per station).
+    existing = {
+        ts for (ts,) in (
+            db.query(WeatherHistorical.timestamp)
+            .filter(
+                WeatherHistorical.station_id == station.id,
+                WeatherHistorical.timestamp >= rows[0]["timestamp"],
+                WeatherHistorical.timestamp <= rows[-1]["timestamp"],
+            )
+            .all()
+        )
+    }
+
     inserted = 0
     for row in rows:
-        exists = (
-            db.query(WeatherHistorical)
-            .filter_by(station_id=station.id, timestamp=row["timestamp"])
-            .first()
-        )
-        if not exists:
+        if row["timestamp"] not in existing:
             db.add(WeatherHistorical(station_id=station.id, **row))
             inserted += 1
 

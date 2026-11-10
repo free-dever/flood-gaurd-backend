@@ -21,10 +21,13 @@ from fastapi_app.app.main import app
 # One shared client for all tests — TestClient wraps the app directly.
 client = TestClient(app)
 
-# Station we'll use throughout — kampala_city_centre (id=2).
-# This is known to have data from the weather fetcher run.
-STATION_ID   = 2
+# Station we'll use throughout — kampala_city_centre.
+# Its id is looked up by name rather than hardcoded, so the tests still
+# work against a database where stations were seeded in a different order.
 STATION_NAME = "kampala_city_centre"
+STATION_ID   = next(
+    s["id"] for s in client.get("/stations").json() if s["name"] == STATION_NAME
+)
 
 # Date range guaranteed to fall inside the stored 30-day historical window.
 # Using dynamic dates keeps tests valid on any future run day.

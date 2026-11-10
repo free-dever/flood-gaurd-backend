@@ -11,10 +11,17 @@ covers day-to-day operation instead.
 | Weather + predictions | `python run_pipeline.py` | 1-2x/day | Weather data (and therefore predictions) goes stale quickly. Runs the weather fetcher, then — only if that succeeded — the flood prediction job, so predictions are never computed from stale weather data. |
 | Demographics | `python demographics_fetcher/run.py` | Manual, ~yearly | Population estimates change far too slowly to justify any automation. Run by hand whenever a new WorldPop dataset year is worth pulling in. |
 
-Nothing above is wired to an actual scheduler yet — for now, both are run
-by hand. Once this is deployed (see `docs/the_plan.md`'s Phase 4), the
-weather+predictions row becomes a hosting-platform Cron Job pointed at
-`run_pipeline.py`; the demographics row stays manual regardless of hosting.
+The weather+predictions job runs automatically via GitHub Actions
+(`.github/workflows/pipeline.yml`) at 03:00 and 15:00 UTC (06:00 and 18:00
+EAT). It needs a `DATABASE_URL` repository secret, and can also be triggered
+by hand from the Actions tab (`workflow_dispatch`). The demographics job
+stays manual.
+
+**Watch out:** GitHub automatically disables scheduled workflows after 60
+days with no commits to the repo. If predictions stop updating, check the
+Actions tab — a disabled workflow must be re-enabled there (or with
+`gh workflow enable "Flood Guard Pipeline"`); pushing a commit alone does
+not turn it back on.
 
 ## `run_pipeline.py` behavior
 

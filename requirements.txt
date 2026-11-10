@@ -3,7 +3,7 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 pytest
-httpx2
+httpx
 
 # Data & ML
 pandas
